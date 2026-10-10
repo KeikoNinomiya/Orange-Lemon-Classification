@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <!-- 6.4 ビューポートの設定 -->
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!-- 6.3 BootstrapのCSSリンク追加 -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+  <title>オレンジ・レモン判定アプリ</title>
+</head>
+<body>
+  <!-- 6.5 class属性によるデザインの適用 -->
+  <div class="container py-5 text-center">
+    <h2 class="mb-4">オレンジかレモンかを画像判定します</h2>
+
+    <form method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+      <div class="mb-3">
+        {{ form.as_p }}
+      </div>
+
+      <!-- リアルタイムプレビュー画像（選択時表示） -->
+      <div class="mb-3">
+        <img id="preview" style="display: none; max-width: 300px; margin: 0 auto;" class="img-fluid rounded shadow-sm" alt="プレビュー画像" />
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-lg">判定</button>
+    </form>
+
+    <!-- 判定結果表示エリア -->
+    {% if prediction %}
+      <div id="prediction" class="mt-4">
+        <hr class="my-4">
+        <h2 class="mb-4">判定結果</h2>
+        <p class="fs-4">あなたのアップロードした画像は「<strong>{{ prediction }}</strong>」でしょう。</p>
+        {% if img_url %}
+          <img src="{{ img_url }}" class="img-fluid rounded shadow mb-3" style="max-width: 300px;" alt="判定画像">
+        {% endif %}
+      </div>
+    {% endif %}
+  </div>
+
+  <!-- JavaScriptによるプレビュー表示＆切り替え処理 -->
+  <script>
+    const imageInput = document.querySelector('input[type="file"]');
+    const previewImage = document.getElementById('preview');
+    const predictionDiv = document.getElementById('prediction');
+
+    if (imageInput) {
+      imageInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = function(e) {
+            previewImage.src = e.target.result;
+            previewImage.style.display = 'block';
+            
+            // 新しい画像が選択されたら前回の判定結果を非表示にする
+            if (predictionDiv) {
+              predictionDiv.style.display = 'none';
+            }
+          }
+          reader.readAsDataURL(file);
+        }
+      });
+    }
+  </script>
+</body>
+</html>
