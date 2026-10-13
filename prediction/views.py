@@ -42,7 +42,7 @@ except Exception:
 def predict(request):
     if request.method == "POST":
         form = ImageUploadForm(request.POST, request.FILES)
-        if form.is_valid():
+        if form.is_valid(): # ← 送信されたデータが正しい形式（画像）かチェック
             img_file = request.FILES["image"]
 
             # 1. 画像ファイルを media フォルダに保存
@@ -65,7 +65,7 @@ def predict(request):
                 prediction_result = "オレンジ"
             else:
                 prediction_result = "レモン"
-                
+
             return render(
                 request,
                 "home.html",
