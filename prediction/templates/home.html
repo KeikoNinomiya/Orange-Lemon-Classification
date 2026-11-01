@@ -3,111 +3,238 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
   <title>オレンジ・レモン判定アプリ</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;700;900&display=swap" rel="stylesheet">
   <style>
-    /* 全体の背景を爽やかなグラデーションに */
+    /* ===== 色と文字の決まりごと（デザイントークン） ===== */
+    :root {
+      --leaf: #2f5a34;        /* 文字・ボタン：葉っぱの深い緑 */
+      --leaf-soft: #e6efe1;   /* 背景：うすい若葉色 */
+      --orange: #f08a24;      /* オレンジの果皮 */
+      --orange-pith: #fde3c4; /* オレンジの内側 */
+      --lemon: #f2cf2a;       /* レモンの果皮 */
+      --lemon-pith: #fbf3c2;  /* レモンの内側 */
+      --paper: #ffffff;
+      --muted: #5d6f5a;
+      --rim: #c9d8c2;         /* 判定前の輪切りのふち */
+    }
+
+    * { box-sizing: border-box; }
+
     body {
-      background: linear-gradient(135deg, #fff2e6 0%, #fffde6 100%);
+      margin: 0;
       min-height: 100vh;
+      font-family: "Zen Maru Gothic", "Hiragino Maru Gothic ProN", sans-serif;
+      color: var(--leaf);
+      background: var(--leaf-soft);
+      line-height: 1.7;
     }
-    /* カード全体のスタイル */
-    .app-card {
-      border: none;
-      border-radius: 20px;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
-      background-color: #ffffff;
+
+    main {
+      max-width: 34rem;
+      margin: 0 auto;
+      padding: 3rem 1rem 4rem;
+      text-align: center;
     }
-    /* オレンジ〜レモン風のグラデーションボタン */
-    .btn-gradient {
-      background: linear-gradient(135deg, #ff9800 0%, #fbc02d 100%);
-      color: #ffffff;
-      border: none;
-      font-weight: bold;
-      transition: transform 0.2s, box-shadow 0.2s;
+
+    /* ===== 見出し ===== */
+    h1 {
+      font-size: clamp(1.9rem, 6vw, 2.6rem);
+      font-weight: 900;
+      line-height: 1.25;
+      margin: 0 0 .5rem;
+      letter-spacing: .02em;
     }
-    .btn-gradient:hover {
-      color: #ffffff;
-      transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(255, 152, 0, 0.35);
-    }
-    /* Django formのファイル選択フォームの見た目を調整 */
-    .form-section p {
-      margin-bottom: 0;
-    }
-    .form-section input[type="file"] {
-      display: block;
-      width: 100%;
-      padding: 0.6rem 1rem;
-      font-size: 1rem;
-      color: #495057;
-      background-color: #fff;
-      border: 2px dashed #ffb74d;
-      border-radius: 12px;
+    h1 .q-orange { color: var(--orange); }
+    h1 .q-lemon  { color: #c9a400; }
+    .lead { color: var(--muted); margin: 0 0 2.25rem; }
+
+    /* ===== 輪切りの画像選択エリア（このページの主役） ===== */
+    .slice {
+      --rim-color: var(--rim);
+      position: relative;
+      display: grid;
+      place-items: center;
+      width: min(18rem, 78vw);
+      aspect-ratio: 1;
+      margin: 0 auto 1.75rem;
+      border-radius: 50%;
+      border: 14px solid var(--rim-color);
+      background:
+        /* 房（じょうのう）の筋を8本 */
+        repeating-conic-gradient(from 22.5deg, transparent 0 44deg, rgba(47,90,52,.12) 44deg 45deg),
+        radial-gradient(circle, var(--paper) 0 12%, #f6f9f3 13% 100%);
+      box-shadow: inset 0 0 0 6px var(--paper);
       cursor: pointer;
+      overflow: hidden;
+      transition: border-color .5s ease, transform .2s ease;
+    }
+    .slice:hover { transform: rotate(-4deg); }
+    .slice:focus-within { outline: 3px dashed var(--leaf); outline-offset: 6px; }
+    .slice.is-dragover { transform: scale(1.03); --rim-color: var(--leaf); }
+
+    .slice input[type="file"] {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+    }
+    .slice-text {
+      position: relative;
+      font-weight: 700;
+      background: var(--paper);
+      padding: .55rem 1rem;
+      border-radius: 999px;
+      pointer-events: none;
+    }
+    .slice-text small { display: block; font-weight: 400; color: var(--muted); font-size: .8rem; }
+
+    .slice img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      pointer-events: none;
+    }
+
+    /* 判定結果に合わせて輪切りのふちが色づく */
+    .slice.is-orange { --rim-color: var(--orange); }
+    .slice.is-lemon  { --rim-color: var(--lemon); }
+
+    /* ===== ボタン ===== */
+    .btn {
+      appearance: none;
+      border: 0;
+      border-radius: 999px;
+      padding: .9rem 2.6rem;
+      font: inherit;
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--paper);
+      background: var(--leaf);
+      cursor: pointer;
+      transition: background .2s ease;
+    }
+    .btn:hover { background: #24472a; }
+    .btn:focus-visible { outline: 3px solid var(--orange); outline-offset: 3px; }
+    .btn:disabled { background: #8aa286; cursor: not-allowed; }
+
+    .errors { color: #b3261e; font-size: .9rem; margin: -1rem 0 1rem; }
+
+    /* ===== 判定結果 ===== */
+    .result {
+      margin-top: 2.5rem;
+      padding: 1.5rem 1.25rem 1.75rem;
+      border-radius: 1.5rem;
+      background: var(--paper);
+    }
+    .result.is-orange { background: var(--orange-pith); }
+    .result.is-lemon  { background: var(--lemon-pith); }
+    .result p { margin: 0; color: var(--muted); }
+    .result .answer {
+      display: block;
+      margin: .25rem 0 .5rem;
+      font-size: clamp(2.6rem, 11vw, 3.6rem);
+      font-weight: 900;
+      line-height: 1.2;
+      color: var(--leaf);
+    }
+    .again {
+      display: inline-block;
+      margin-top: 1rem;
+      color: var(--leaf);
+      font-weight: 700;
+    }
+
+    footer { margin-top: 3rem; font-size: .8rem; color: var(--muted); }
+
+    @media (prefers-reduced-motion: reduce) {
+      .slice, .btn { transition: none; }
+      .slice:hover, .slice.is-dragover { transform: none; }
     }
   </style>
 </head>
-<body class="d-flex align-items-center justify-content-center py-5">
-  <div class="container" style="max-width: 520px;">
-    <div class="card app-card p-4 p-sm-5 text-center">
-      
-      <h2 class="h4 fw-bold text-dark mb-4">🍊 オレンジかレモンかを画像判定 🍋</h2>
+<body>
+  <main>
+    <h1><span class="q-orange">オレンジ</span>？<br><span class="q-lemon">レモン</span>？</h1>
+    <p class="lead">見分けにくい柑橘の写真を、AIが判定します。</p>
 
-      <form method="post" enctype="multipart/form-data">
-        {% csrf_token %}
-        <div class="form-section mb-4 text-start">
-          {{ form.as_p }}
-        </div>
+    <form method="post" enctype="multipart/form-data" id="judge-form">
+      {% csrf_token %}
 
-        <!-- リアルタイムプレビュー画像（選択時表示） -->
-        <div class="mb-4">
-          <img id="preview" style="display: none; max-width: 100%; max-height: 250px; margin: 0 auto;" class="img-fluid rounded-3 shadow-sm" alt="プレビュー画像" />
-        </div>
+      <label class="slice {% if prediction == 'オレンジ' %}is-orange{% elif prediction == 'レモン' %}is-lemon{% endif %}" id="slice">
+        {% if img_url %}
+          <img id="preview" src="{{ img_url }}" alt="判定した画像">
+        {% else %}
+          <img id="preview" alt="選んだ画像のプレビュー" hidden>
+        {% endif %}
+        <span class="slice-text" id="slice-text" {% if img_url %}hidden{% endif %}>
+          写真を選ぶ
+          <small>タップ、またはここへドロップ</small>
+        </span>
+        {{ form.image }}
+      </label>
 
-        <button type="submit" class="btn btn-gradient btn-lg w-100 py-3 rounded-pill">判定する</button>
-      </form>
-
-      <!-- 判定結果表示エリア -->
-      {% if prediction %}
-        <div id="prediction" class="mt-4 pt-3 border-top">
-          <span class="badge bg-warning text-dark fs-6 mb-2">判定結果</span>
-          <p class="fs-4 fw-bold text-dark my-2">「<span class="text-danger">{{ prediction }}</span>」でしょう！</p>
-          {% if img_url %}
-            <div class="mt-3">
-              <img src="{{ img_url }}" class="img-fluid rounded-3 shadow-sm" style="max-width: 100%; max-height: 250px;" alt="判定画像">
-            </div>
-          {% endif %}
-        </div>
+      {% if form.image.errors %}
+        <p class="errors">{{ form.image.errors|striptags }}</p>
       {% endif %}
 
-    </div>
-  </div>
+      <button type="submit" class="btn" id="judge-btn" disabled>判定する</button>
+    </form>
 
-  <!-- JavaScriptによるプレビュー表示＆切り替え処理（内容は元のまま） -->
+    {% if prediction %}
+      <section class="result {% if prediction == 'オレンジ' %}is-orange{% else %}is-lemon{% endif %}" id="prediction" aria-live="polite">
+        <p>この写真は</p>
+        <strong class="answer">{{ prediction }}</strong>
+        <p>でしょう。</p>
+        <a class="again" href="{% url 'predict' %}">別の写真で試す</a>
+      </section>
+    {% endif %}
+
+    <footer>判定にはディープラーニング（CNN）で学習したモデルを使っています。</footer>
+  </main>
+
   <script>
-    const imageInput = document.querySelector('input[type="file"]');
-    const previewImage = document.getElementById('preview');
-    const predictionDiv = document.getElementById('prediction');
+    const slice = document.getElementById('slice');
+    const input = slice.querySelector('input[type="file"]');
+    const preview = document.getElementById('preview');
+    const sliceText = document.getElementById('slice-text');
+    const button = document.getElementById('judge-btn');
+    const result = document.getElementById('prediction');
 
-    if (imageInput) {
-      imageInput.addEventListener('change', function(e) {
-        const file = e.target.files[0];
-        if (file) {
-          const reader = new FileReader();
-          reader.onload = function(e) {
-            previewImage.src = e.target.result;
-            previewImage.style.display = 'block';
-            
-            // 新しい画像が選択されたら前回の判定結果を非表示にする
-            if (predictionDiv) {
-              predictionDiv.style.display = 'none';
-            }
-          }
-          reader.readAsDataURL(file);
-        }
-      });
+    input.setAttribute('accept', 'image/*');
+
+    function showPreview(file) {
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        preview.src = e.target.result;
+        preview.hidden = false;
+        sliceText.hidden = true;
+        button.disabled = false;
+        // 新しい写真を選んだら、前回の判定結果と色を消す
+        slice.classList.remove('is-orange', 'is-lemon');
+        if (result) result.hidden = true;
+      };
+      reader.readAsDataURL(file);
     }
+
+    input.addEventListener('change', (e) => showPreview(e.target.files[0]));
+
+    // ドラッグ＆ドロップ中は輪切りを少し大きくする
+    ['dragenter', 'dragover'].forEach((type) =>
+      slice.addEventListener(type, () => slice.classList.add('is-dragover')));
+    ['dragleave', 'drop'].forEach((type) =>
+      slice.addEventListener(type, () => slice.classList.remove('is-dragover')));
+
+    // 送信中はボタンを押せないようにする（判定に数秒かかるため）
+    document.getElementById('judge-form').addEventListener('submit', () => {
+      button.disabled = true;
+      button.textContent = '判定中…';
+    });
   </script>
 </body>
 </html>
