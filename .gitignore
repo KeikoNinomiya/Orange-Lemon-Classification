@@ -12,3 +12,6 @@ db.sqlite3
 media
 # *.h5
 # models
+.venv/
+venv/
+.vscode/

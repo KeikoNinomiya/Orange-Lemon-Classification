@@ -60,12 +60,11 @@ def predict(request):
             # 3. 推論の実行
             predictions = model.predict(img_array)
 
-            # 判定ロジックの反転（0.5以上をオレンジにする）
-            if predictions[0][0] >= 0.5:
+            # 学習時のラベル: 0 = Lemon 1（レモン）、1 = Orange 1（オレンジ）
+            if predictions[0][1] >= 0.5:
                 prediction_result = "オレンジ"
             else:
                 prediction_result = "レモン"
-
             return render(
                 request,
                 "home.html",

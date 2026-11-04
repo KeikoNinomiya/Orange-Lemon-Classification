@@ -31,6 +31,13 @@
       background: var(--leaf-soft);
       line-height: 1.7;
     }
+        /* 判定結果に合わせて、画面全体の背景色を変える */
+    body { transition: background .6s ease; }
+    body.is-orange { background: var(--orange-pith); }
+    body.is-lemon  { background: var(--lemon-pith); }
+    /* 背景と同じ色になる結果カードは白にして、目立たせる */
+    body.is-orange .result,
+    body.is-lemon  .result { background: var(--paper); }
 
     main {
       max-width: 34rem;
@@ -48,7 +55,7 @@
       letter-spacing: .02em;
     }
     h1 .q-orange { color: var(--orange); }
-    h1 .q-lemon  { color: #c9a400; }
+    h1 .q-lemon { color: #f5c400; }
     .lead { color: var(--muted); margin: 0 0 2.25rem; }
 
     /* ===== 輪切りの画像選択エリア（このページの主役） ===== */
@@ -157,9 +164,9 @@
     }
   </style>
 </head>
-<body>
+<body class="{% if prediction == 'オレンジ' %}is-orange{% elif prediction == 'レモン' %}is-lemon{% endif %}">
   <main>
-    <h1><span class="q-orange">オレンジ</span>？<br><span class="q-lemon">レモン</span>？</h1>
+    <h1><span class="q-orange">オレンジ</span><span class="q-lemon">レモン</span><br>判別アプリ</h1>
     <p class="lead">見分けにくい柑橘の写真を、AIが判定します。</p>
 
     <form method="post" enctype="multipart/form-data" id="judge-form">
@@ -217,6 +224,7 @@
         button.disabled = false;
         // 新しい写真を選んだら、前回の判定結果と色を消す
         slice.classList.remove('is-orange', 'is-lemon');
+        document.body.classList.remove('is-orange', 'is-lemon');
         if (result) result.hidden = true;
       };
       reader.readAsDataURL(file);
